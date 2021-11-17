@@ -20,4 +20,6 @@ ReactDOM.render(
 reportWebVitals();
 
 ReactDOM.render(<><main className="container">
-  <h1 className="row">Rhyme Finder (SI579 PS06)</h1></main></>, document.getElementById('root'));
+  <h1 className="row">Rhyme Finder (SI579 PS06)</h1>
+  <Finder />
+  </main></>, document.getElementById('root'));
