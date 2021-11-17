@@ -1,43 +1,81 @@
-import {useState, useRef} from 'react';
+import {useState, useRef, useEffect} from 'react';
 import RhymeWord from './RhymeWord';
+
+
 
 function Finder(){
     const [SAVED_WORDS_COUNTER, setSavedWordCount] = useState(0);
     const [SAVED_WORDS, setSavedWords] = useState([]);
     const [DESC, setDescription] = useState("");
     const [RHYME_WORDS, setRhymes] = useState({});
-    const [SYN_WORDS, setSyns] = useState({});
     const [OUTPUTS, setOutputs] = useState([]);
     const [JSON_DATA, setJsonData] = useState([]);
+    const [current_func, set_funct] = useState(0);
 
     let output_elements = [];
 
     const searchWordInput = useRef(null);
+    const r_pressed = useRef(null);
+    const s_pressed = useRef(null);
 
-    for(const [key,value] of Object.entries(RHYME_WORDS)){
-        output_elements.push(<h2>{key}</h2>)
-        for(const word of value){
-            const rhyme_word = <RhymeWord text={word['word']} />;
-            output_elements.push(rhyme_word);
+    // for(const [key,value] of Object.entries(RHYME_WORDS)){
+    //     output_elements.push(<h2>{key}</h2>)
+    //     for(const word of value){
+    //         const rhyme_word = <RhymeWord text={word['word']} />;
+    //         output_elements.push(rhyme_word);
+    //     }
+    // }
+
+    // only run this hook when the JSON_DATA field has changed
+
+    useEffect(() => {
+        setJsonData(JSON_DATA);
+        let grouped_json_data = groupBy(JSON_DATA, "numSyllables");
+        setRhymes(grouped_json_data);
+        //console.log('JSON DATA CHANGED!');
+    }, [JSON_DATA]);
+
+    // only run this hook when the RHYME_WORDS field has changed
+    useEffect(() => {
+        setOutputs([]);
+        for(const [key,value] of Object.entries(RHYME_WORDS)){
+            const word_elements = [];
+            output_elements.push(<h2>{key} Syllables:</h2>);
+            for(const word of value){
+                const rhyme_word = <RhymeWord text={word['word']} />;
+                word_elements.push(rhyme_word);
+            }
+            output_elements.push(<ul>{word_elements}</ul>);
         }
-    }
+        let newOutput = output_elements;
+        setOutputs(newOutput);
+        const new_desc = `Words that rhyme with ${searchWordInput.current.value}`;
+        setDescription(new_desc);
+    }, [RHYME_WORDS]);
 
     async function getRhymes(rel_rhy) {
         let response = await fetch(`https://api.datamuse.com/words?${(new URLSearchParams({rel_rhy})).toString()}`);
-        return await response.json();
-        //.then((data) => setJsonData(data));
-        //console.log(data);
-        // return response;
+        let json = await response.json()
+        .then((data) => {
+            //console.log('got data promise!');
+            return data;
+        })
+        .then((data) => {
+            setJsonData(data);
+            //console.log('did setJSON!');
+        });
     }
 
-    function getSynonyms(rel_syn, callback) {
-        fetch(`https://api.datamuse.com/words?${(new URLSearchParams({rel_syn})).toString()}`)
-            .then((response) => response.json())
-            .then((data) => {
-                callback(data);
-            }, (err) => {
-                console.error(err);
-            });
+    async function getSynonyms(rel_syn) {
+        // fetch(`https://api.datamuse.com/words?${(new URLSearchParams({rel_syn})).toString()}`)
+        //     .then((response) => response.json())
+        //     .then((data) => {
+        //         return data;
+        //     }, (err) => {
+        //         console.error(err);
+        //     });
+        let response = await fetch(`https://api.datamuse.com/words?${(new URLSearchParams({rel_syn})).toString()}`);
+        return await response.json();
     }
 
     function groupBy(objects, property) {
@@ -65,22 +103,19 @@ function Finder(){
     }
 
    function makeRhymes(){
-        //setOutputs(['']);
         const loading_desc = "loading...";
-        let grouped_json_data = {}
         setDescription(loading_desc);
-        //let json_promise= await getRhymes(searchWordInput.current.value);
-        getRhymes(searchWordInput.current.value).then((data) => setJsonData(data));
-        //console.log(JSON_DATA);
-        grouped_json_data = groupBy(JSON_DATA, "numSyllables");
-        console.log(grouped_json_data);
-        setRhymes(grouped_json_data);
-        //console.log(RHYME_WORDS);
+        getRhymes(searchWordInput.current.value);
+        set_funct(0);
+    }
 
-        const new_desc = `Words that rhyme with ${searchWordInput.current.value}`;
+    function makeSyns(){
+        const loading_desc = "loading...";
+        setDescription(loading_desc);
+        getSynonyms(searchWordInput.current.value);
+        const new_desc = `Words that have similar meanings to ${searchWordInput.current.value}`;
         setDescription(new_desc);
-        setOutputs(OUTPUTS.concat(output_elements));
-        //console.log(OUTPUTS);
+        set_funct(1);
     }
 
     function addSavedWord(){
@@ -95,22 +130,39 @@ function Finder(){
         }
     }
 
+    function onKeyDown(event) {
+        if(event.key === 'Enter') {
+            if(current_func === 0){
+            makeRhymes(); // add the task if the user presses enter in the input field
+            r_pressed.current.focus();
+            }
+            else {
+                s_pressed.current.focus();
+                makeSyns();
+            }
+            console.log(r_pressed);
+            console.log(s_pressed);
+        }
+    }
+
     return <>
         <div className="row">
         <div className="col">Saved words: {SAVED_WORDS} </div>
         </div>
         <div className="row">
         <div className="input-group col">
-            <input className="form-control" ref={searchWordInput} type="text" placeholder="Enter a word" id="word_input" />
-            <button onClick={makeRhymes} id="show_rhymes" type="button" className="btn btn-primary">Show rhyming words</button>
-            <button id="show_synonyms" type="button" className="btn btn-secondary">Show synonyms</button>
+            <input className="form-control" onKeyDown={onKeyDown} ref={searchWordInput} type="text" placeholder="Enter a word" id="word_input" />
+            <button onClick={makeRhymes} id="show_rhymes" type="button" ref={r_pressed} className="btn btn-primary">Show rhyming words</button>
+            <button onClick={makeSyns} id="show_synonyms" type="button" ref={s_pressed} className="btn btn-secondary">Show synonyms</button>
         </div>
         </div>
         <div className="row">
             <h2 className="col" id="output_description">{DESC}</h2>
         </div>
         <div className="output row">
-                <output id = "word_output" className="col">{OUTPUTS}</output>
+                <output id = "word_output" className="col">
+                    {OUTPUTS}
+                </output>
         </div>
         </>
 }
