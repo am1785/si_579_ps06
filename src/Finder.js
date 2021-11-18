@@ -1,7 +1,8 @@
-import {useState, useRef, useEffect} from 'react';
+import {useState, useRef, useEffect, useCallback} from 'react';
 import RhymeWord from './RhymeWord';
-
-
+import SavedWords from './SavedWords';
+import NoResult from './RhymeWord';
+import React from 'react';
 
 function Finder(){
     const [SAVED_WORDS_COUNTER, setSavedWordCount] = useState(0);
@@ -14,6 +15,7 @@ function Finder(){
     const [current_func, set_funct] = useState(0);
 
     const output_elements = [];
+    const words_to_be_saved = [];
 
     const searchWordInput = useRef(null);
     const r_pressed = useRef(null);
@@ -41,7 +43,7 @@ function Finder(){
             const word_elements = [];
             output_elements.push(<h2>{key} Syllables:</h2>);
             for(const word of value){
-                const rhyme_word = <RhymeWord text={word['word']} />;
+                const rhyme_word = <RhymeWord text={word['word']} onSave= {() => addSavedWord(word['word'])} />;
                 word_elements.push(rhyme_word);
             }
             output_elements.push(<ul>{word_elements}</ul>);
@@ -54,10 +56,9 @@ function Finder(){
 
     useEffect(() => {
         setOutputs([]);
-        console.log(SYN_WORDS);
         const word_elements = [];
         for(const word of SYN_WORDS){
-            const syn_word = <RhymeWord text={word['word']} />;
+            const syn_word = <RhymeWord text={word['word']} onSave= {() => addSavedWord(word['word'])} />;
             word_elements.push(syn_word);
         }
         output_elements.push(<ul>{word_elements}</ul>);
@@ -67,16 +68,20 @@ function Finder(){
         setDescription(new_desc);
     }, [SYN_WORDS]);
 
+    // useEffect(() => {
+    //     setSavedWordCount(SAVED_WORDS_COUNTER + 1);
+    //     console.log(SAVED_WORDS_COUNTER);
+    // }, [words_to_be_saved]);
+
+
     async function getRhymes(rel_rhy) {
         let response = await fetch(`https://api.datamuse.com/words?${(new URLSearchParams({rel_rhy})).toString()}`);
         let json = await response.json()
         .then((data) => {
-            //console.log('got data promise!');
             return data;
         })
         .then((data) => {
             setJsonData(data);
-            //console.log('did setJSON!');
         });
     }
 
@@ -129,15 +134,29 @@ function Finder(){
         set_funct(1);
     }
 
-    function addSavedWord(){
-        setSavedWordCount(SAVED_WORDS_COUNTER + 1);
-        if (SAVED_WORDS_COUNTER === 0){
-            const newlist = SAVED_WORDS.concat(searchWordInput.current.value);
-            setSavedWords(newlist);
+    function addSavedWord(word){
+        if (words_to_be_saved.length === 0){
+            // let newlist = [];
+            // newlist = [...SAVED_WORDS, word];
+            // console.log(newlist);
+            // setSavedWords(newlist);
+            // setSavedWordCount(newlist.length);
+            const saved = <SavedWords description={word}/>;
+            words_to_be_saved.push(saved.props.description);
+            console.log(words_to_be_saved);
+            setSavedWords(SAVED_WORDS.concat(words_to_be_saved));
+            setSavedWordCount(words_to_be_saved.length);
+
         } else {
-        let newlist = SAVED_WORDS.concat(', ');
-        newlist = newlist.concat(searchWordInput.current.value);
-        setSavedWords(newlist);
+            // let newlist = [];
+            // newlist = [...SAVED_WORDS, ', ', word];
+            // console.log(newlist);
+            // setSavedWords(newlist);
+            // setSavedWordCount(newlist.length);
+            const saved = <SavedWords description={', '.concat(word)} />;
+            words_to_be_saved.push(saved.props.description);
+            setSavedWords(SAVED_WORDS.concat(words_to_be_saved));
+            setSavedWordCount(words_to_be_saved.length);
         }
     }
 
@@ -151,8 +170,6 @@ function Finder(){
                 s_pressed.current.focus();
                 makeSyns();
             }
-            console.log(r_pressed);
-            console.log(s_pressed);
         }
     }
 
