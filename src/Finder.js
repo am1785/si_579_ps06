@@ -8,34 +8,33 @@ function Finder(){
     const [SAVED_WORDS, setSavedWords] = useState([]);
     const [DESC, setDescription] = useState("");
     const [RHYME_WORDS, setRhymes] = useState({});
+    const [SYN_WORDS, setSynonyms] = useState([]);
     const [OUTPUTS, setOutputs] = useState([]);
     const [JSON_DATA, setJsonData] = useState([]);
     const [current_func, set_funct] = useState(0);
 
-    let output_elements = [];
+    const output_elements = [];
 
     const searchWordInput = useRef(null);
     const r_pressed = useRef(null);
     const s_pressed = useRef(null);
 
-    // for(const [key,value] of Object.entries(RHYME_WORDS)){
-    //     output_elements.push(<h2>{key}</h2>)
-    //     for(const word of value){
-    //         const rhyme_word = <RhymeWord text={word['word']} />;
-    //         output_elements.push(rhyme_word);
-    //     }
-    // }
-
     // only run this hook when the JSON_DATA field has changed
 
     useEffect(() => {
         setJsonData(JSON_DATA);
+        if(current_func === 0) {
         let grouped_json_data = groupBy(JSON_DATA, "numSyllables");
         setRhymes(grouped_json_data);
+        }
+        else {
+        setSynonyms(JSON_DATA);
+        }
         //console.log('JSON DATA CHANGED!');
     }, [JSON_DATA]);
 
     // only run this hook when the RHYME_WORDS field has changed
+
     useEffect(() => {
         setOutputs([]);
         for(const [key,value] of Object.entries(RHYME_WORDS)){
@@ -53,6 +52,21 @@ function Finder(){
         setDescription(new_desc);
     }, [RHYME_WORDS]);
 
+    useEffect(() => {
+        setOutputs([]);
+        console.log(SYN_WORDS);
+        const word_elements = [];
+        for(const word of SYN_WORDS){
+            const syn_word = <RhymeWord text={word['word']} />;
+            word_elements.push(syn_word);
+        }
+        output_elements.push(<ul>{word_elements}</ul>);
+        let newOutput = output_elements;
+        setOutputs(newOutput);
+        const new_desc = `Words that have similar meanings to ${searchWordInput.current.value}`;
+        setDescription(new_desc);
+    }, [SYN_WORDS]);
+
     async function getRhymes(rel_rhy) {
         let response = await fetch(`https://api.datamuse.com/words?${(new URLSearchParams({rel_rhy})).toString()}`);
         let json = await response.json()
@@ -67,15 +81,14 @@ function Finder(){
     }
 
     async function getSynonyms(rel_syn) {
-        // fetch(`https://api.datamuse.com/words?${(new URLSearchParams({rel_syn})).toString()}`)
-        //     .then((response) => response.json())
-        //     .then((data) => {
-        //         return data;
-        //     }, (err) => {
-        //         console.error(err);
-        //     });
         let response = await fetch(`https://api.datamuse.com/words?${(new URLSearchParams({rel_syn})).toString()}`);
-        return await response.json();
+        let json = await response.json()
+        .then((data) => {
+            return data;
+        })
+        .then((data) => {
+            setJsonData(data);
+        });
     }
 
     function groupBy(objects, property) {
@@ -113,8 +126,6 @@ function Finder(){
         const loading_desc = "loading...";
         setDescription(loading_desc);
         getSynonyms(searchWordInput.current.value);
-        const new_desc = `Words that have similar meanings to ${searchWordInput.current.value}`;
-        setDescription(new_desc);
         set_funct(1);
     }
 
