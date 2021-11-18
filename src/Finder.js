@@ -39,23 +39,41 @@ function Finder(){
 
     useEffect(() => {
         setOutputs([]);
-        for(const [key,value] of Object.entries(RHYME_WORDS)){
-            const word_elements = [];
-            output_elements.push(<h2>{key} Syllables:</h2>);
-            for(const word of value){
-                const rhyme_word = <RhymeWord text={word['word']} onSave= {() => addSavedWord(word['word'])} />;
-                word_elements.push(rhyme_word);
-            }
-            output_elements.push(<ul>{word_elements}</ul>);
+        if (RHYME_WORDS && Object.keys(RHYME_WORDS).length === 0) {
+            const rhyme_word = <NoResult />;
+            output_elements.push(<ul>{rhyme_word}</ul>);
+            let newOutput = output_elements;
+            setOutputs(newOutput);
+            const new_desc = `Words that rhyme with ${searchWordInput.current.value}`;
+            setDescription(new_desc);
         }
-        let newOutput = output_elements;
-        setOutputs(newOutput);
-        const new_desc = `Words that rhyme with ${searchWordInput.current.value}`;
-        setDescription(new_desc);
+        else {
+            for(const [key,value] of Object.entries(RHYME_WORDS)){
+                const word_elements = [];
+                output_elements.push(<h2>{key} Syllables:</h2>);
+                for(const word of value){
+                    const rhyme_word = <RhymeWord text={word['word']} onSave= {() => addSavedWord(word['word'])} />;
+                    word_elements.push(rhyme_word);
+                }
+                output_elements.push(<ul>{word_elements}</ul>);
+            }
+            let newOutput = output_elements;
+            setOutputs(newOutput);
+            const new_desc = `Words that rhyme with ${searchWordInput.current.value}`;
+            setDescription(new_desc);
+        }
     }, [RHYME_WORDS]);
 
     useEffect(() => {
         setOutputs([]);
+        if (SYN_WORDS && Object.keys(SYN_WORDS).length === 0) {
+            const syn_word = <NoResult />;
+            output_elements.push(<ul>{syn_word}</ul>);
+            let newOutput = output_elements;
+            setOutputs(newOutput);
+            const new_desc = `Words have similar meanings to ${searchWordInput.current.value}`;
+            setDescription(new_desc);
+        } else {
         const word_elements = [];
         for(const word of SYN_WORDS){
             const syn_word = <RhymeWord text={word['word']} onSave= {() => addSavedWord(word['word'])} />;
@@ -66,6 +84,7 @@ function Finder(){
         setOutputs(newOutput);
         const new_desc = `Words that have similar meanings to ${searchWordInput.current.value}`;
         setDescription(new_desc);
+        }
     }, [SYN_WORDS]);
 
     // useEffect(() => {
@@ -73,6 +92,9 @@ function Finder(){
     //     console.log(SAVED_WORDS_COUNTER);
     // }, [words_to_be_saved]);
 
+    function NoResult (props){
+        return <li>No Result.</li>;
+    }
 
     async function getRhymes(rel_rhy) {
         let response = await fetch(`https://api.datamuse.com/words?${(new URLSearchParams({rel_rhy})).toString()}`);
