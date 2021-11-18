@@ -87,11 +87,6 @@ function Finder(){
         }
     }, [SYN_WORDS]);
 
-    // useEffect(() => {
-    //     setSavedWordCount(SAVED_WORDS_COUNTER + 1);
-    //     console.log(SAVED_WORDS_COUNTER);
-    // }, [words_to_be_saved]);
-
     function NoResult (props){
         return <li>No Result.</li>;
     }
@@ -158,23 +153,13 @@ function Finder(){
 
     function addSavedWord(word){
         if (words_to_be_saved.length === 0){
-            // let newlist = [];
-            // newlist = [...SAVED_WORDS, word];
-            // console.log(newlist);
-            // setSavedWords(newlist);
-            // setSavedWordCount(newlist.length);
             const saved = <SavedWords description={word}/>;
             words_to_be_saved.push(saved.props.description);
-            console.log(words_to_be_saved);
+            //console.log(words_to_be_saved);
             setSavedWords(SAVED_WORDS.concat(words_to_be_saved));
             setSavedWordCount(words_to_be_saved.length);
 
         } else {
-            // let newlist = [];
-            // newlist = [...SAVED_WORDS, ', ', word];
-            // console.log(newlist);
-            // setSavedWords(newlist);
-            // setSavedWordCount(newlist.length);
             const saved = <SavedWords description={', '.concat(word)} />;
             words_to_be_saved.push(saved.props.description);
             setSavedWords(SAVED_WORDS.concat(words_to_be_saved));
