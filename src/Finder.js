@@ -1,12 +1,12 @@
-import {useState, useRef, useEffect, useCallback} from 'react';
+import {useState, useRef, useEffect} from 'react';
 import RhymeWord from './RhymeWord';
 import SavedWords from './SavedWords';
-import NoResult from './RhymeWord';
 import React from 'react';
 
 function Finder(){
     const [SAVED_WORDS_COUNTER, setSavedWordCount] = useState(0);
     const [SAVED_WORDS, setSavedWords] = useState([]);
+    const [SAVED_OUTPUT, setSavedOutput] = useState("");
     const [DESC, setDescription] = useState("");
     const [RHYME_WORDS, setRhymes] = useState({});
     const [SYN_WORDS, setSynonyms] = useState([]);
@@ -22,6 +22,12 @@ function Finder(){
     const s_pressed = useRef(null);
 
     // only run this hook when the JSON_DATA field has changed
+
+    useEffect(() => {
+        if(SAVED_WORDS_COUNTER){
+            setSavedOutput(SAVED_WORDS.join(', '));
+        }
+    }, [SAVED_WORDS_COUNTER]);
 
     useEffect(() => {
         setJsonData(JSON_DATA);
@@ -86,6 +92,8 @@ function Finder(){
         setDescription(new_desc);
         }
     }, [SYN_WORDS]);
+
+    console.log(SAVED_WORDS_COUNTER);
 
     function NoResult (props){
         return <li>No Result.</li>;
@@ -152,19 +160,11 @@ function Finder(){
     }
 
     function addSavedWord(word){
-        if (words_to_be_saved.length === 0){
-            const saved = <SavedWords description={word}/>;
-            words_to_be_saved.push(saved.props.description);
-            //console.log(words_to_be_saved);
-            setSavedWords(SAVED_WORDS.concat(words_to_be_saved));
-            setSavedWordCount(words_to_be_saved.length);
-
-        } else {
-            const saved = <SavedWords description={', '.concat(word)} />;
-            words_to_be_saved.push(saved.props.description);
-            setSavedWords(SAVED_WORDS.concat(words_to_be_saved));
-            setSavedWordCount(words_to_be_saved.length);
-        }
+        let saved;
+        saved = <SavedWords description={word} />;
+        words_to_be_saved.push(saved.props.description);
+        setSavedWords(SAVED_WORDS.concat(words_to_be_saved));
+        setSavedWordCount(prev_count => prev_count + 1);
     }
 
     function onKeyDown(event) {
@@ -182,7 +182,7 @@ function Finder(){
 
     return <>
         <div className="row">
-        <div className="col">Saved words: {SAVED_WORDS} </div>
+        <div className="col">Saved words: {SAVED_OUTPUT} </div>
         </div>
         <div className="row">
         <div className="input-group col">

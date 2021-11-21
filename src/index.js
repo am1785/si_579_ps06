@@ -21,5 +21,6 @@ reportWebVitals();
 
 ReactDOM.render(<><main className="container">
   <h1 className="row">Rhyme Finder (SI579 PS06)</h1>
+  <h3>Link to Repository: <a href="https://github.com/am1785/si_579_ps06">https://github.com/am1785/si_579_ps06</a></h3>
   <Finder />
   </main></>, document.getElementById('root'));
